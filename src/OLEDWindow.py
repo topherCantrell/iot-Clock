@@ -19,6 +19,9 @@ class OLEDWindow:
         # Make and clear the screen buffer
         self.screenBuffer = [0]*(width/2)*height
         
+    def clear(self):
+        self.screenBuffer = [0]*(self.width/2)*self.height
+        
     def draw_screen_buffer(self):
         self.oled.set_data_window(self.x,self.y,self.width,self.height)        
         self.oled.Write_Instruction(0x5c)        
@@ -262,10 +265,10 @@ class OLEDWindow:
         for c in mes:
             self.draw_bw_image(x, y, 8, 8, color, FONT_5x7, ord(c)*8)
             x=x+8
-    def draw_big_text(self,x,y,mes,color):        
+    def draw_big_text(self,x,y,mes,color,xofs=16):        
         for c in mes:
             self.draw_big_bw_image(x, y, 8, 8, color, FONT_5x7, ord(c)*8)
-            x=x+16
+            x=x+xofs
 
         
         

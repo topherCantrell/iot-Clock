@@ -47,7 +47,7 @@ SEVEN_SEGS = [
     ]
 
 def draw_colon():
-    for num in xrange(2):
+    for num in range(2):
         x = COLON_OFS[num][0]
         y = COLON_OFS[num][1]
         window_one.DrawBox(x,y,5,5,8)
@@ -87,10 +87,10 @@ while True:
         hours = hours - 12
         pm = True
     
-    hours_a = hours/10
-    hours_b = hours%10
-    mins_a = mins/10
-    mins_b = mins%10
+    hours_a = int(hours/10)
+    hours_b = int(hours%10)
+    mins_a = int(mins/10)
+    mins_b = int(mins%10)
 
     if hours_a>0:
         draw_digit(0,hours_a)

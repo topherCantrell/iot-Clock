@@ -10,6 +10,8 @@ python app_clock.py
 
 # Maybe blink the colon ever so often to show running
 
+# 0,0 .. 124,25
+
 from OLED import OLED
 from OLEDWindow import OLEDWindow
 import time
@@ -21,16 +23,29 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.input(23)
 
+LIMITS = [124,24]
+
+SEG_LENGTH = 18
+SEG_WIDTH = 3
+SEG_COLOR = 15
+
+COLON_SIZE = 3
+COLON_COLOR = 8
+
+PM_X = (SEG_LENGTH+SEG_LENGTH+10)*2+27
+PM_Y = SEG_LENGTH*2 - 5
+PM_COLOR = 15
+
 DIGIT_OFS = [
-    [29-5,0],
-    [81-5,0],
-    [143-5,0],
-    [195-5,0]
+    [0,0],
+    [SEG_LENGTH+10,0],
+    [(SEG_LENGTH+10)*2+9,0],
+    [(SEG_LENGTH+10)*3+9,0]
     ]
 
 COLON_OFS = [
-    [126-5,16],
-    [126-5,42]
+    [(SEG_LENGTH+8)*2+4,int(SEG_LENGTH/2)+2],
+    [(SEG_LENGTH+8)*2+4,SEG_LENGTH+int(SEG_LENGTH/2)]
     ]
 
 SEVEN_SEGS = [
@@ -46,13 +61,13 @@ SEVEN_SEGS = [
     'abcdfg', # 9
     ]
 
-def draw_colon():
+def draw_colon(xofs,yofs):
     for num in range(2):
         x = COLON_OFS[num][0]
         y = COLON_OFS[num][1]
-        window_one.DrawBox(x,y,5,5,8)
+        window_one.DrawBox(x+xofs,y+yofs,COLON_SIZE,COLON_SIZE,COLON_COLOR)
         
-def draw_digit(num,value):
+def draw_digit(xofs,yofs,num,value):
     
     # clockwise from top: a,b,c,d,e,f, and g in middle
     
@@ -61,23 +76,27 @@ def draw_digit(num,value):
     x = DIGIT_OFS[num][0]
     y = DIGIT_OFS[num][1]
 
-    if 'a' in segs: window_one.DrawBox(x+0,y+2,32,6,15) # a    
-    if 'b' in segs: window_one.DrawBox(x+28,y+2,5,32,15) # b
-    if 'c' in segs: window_one.DrawBox(x+28,y+29,5,32,15) # c
-    if 'd' in segs: window_one.DrawBox(x+0,y+56,32,5,15) # d
-    if 'e' in segs: window_one.DrawBox(x+0,y+29,5,32,15) # e
-    if 'f' in segs: window_one.DrawBox(x+0,y+2,5,32,15) # f
-    if 'g' in segs: window_one.DrawBox(x+0,y+29,32,5,15) # g
+    if 'a' in segs: window_one.DrawBox(x+xofs+1, y+yofs+0,                       SEG_LENGTH, SEG_WIDTH,  SEG_COLOR) # a    
+    if 'b' in segs: window_one.DrawBox(x+xofs+SEG_LENGTH-1, y+yofs+1,            SEG_WIDTH,  SEG_LENGTH, SEG_COLOR) # b
+    if 'c' in segs: window_one.DrawBox(x+xofs+SEG_LENGTH-1, y+yofs+SEG_LENGTH+2, SEG_WIDTH,  SEG_LENGTH, SEG_COLOR) # c
+    if 'd' in segs: window_one.DrawBox(x+xofs+1, y+yofs+SEG_LENGTH*2,            SEG_LENGTH, SEG_WIDTH,  SEG_COLOR) # d
+    if 'e' in segs: window_one.DrawBox(x+xofs+0, y+yofs+SEG_LENGTH+2,            SEG_WIDTH,  SEG_LENGTH, SEG_COLOR) # e
+    if 'f' in segs: window_one.DrawBox(x+xofs+0, y+yofs+1,                       SEG_WIDTH,  SEG_LENGTH, SEG_COLOR) # f
+    if 'g' in segs: window_one.DrawBox(x+xofs+1, y+yofs+SEG_LENGTH,              SEG_LENGTH, SEG_WIDTH,  SEG_COLOR) # g
     
 # The OLED hardware driver
 oled = OLED()
 
 window_one = OLEDWindow(oled,0,0,256,64)
+xofs = 0
+yofs = 0
+dirx = 1
+diry = 1
 
 while True:
-
+        
     window_one.clear()
-    draw_colon()
+    draw_colon(xofs,yofs)
     
     now = datetime.datetime.now()    
     hours = now.hour
@@ -85,23 +104,38 @@ while True:
     pm = False
     if hours>12:
         hours = hours - 12
-        pm = True
+        pm = True    
     
     hours_a = int(hours/10)
     hours_b = int(hours%10)
-    mins_a = int(mins/10)
-    mins_b = int(mins%10)
+    mins_a =  int(mins/10)
+    mins_b =  int(mins%10)
 
     if hours_a>0:
-        draw_digit(0,hours_a)
-    draw_digit(1,hours_b)
-    draw_digit(2,mins_a)
-    draw_digit(3,mins_b)
+        draw_digit(xofs,yofs,0,hours_a)
+    draw_digit(xofs,yofs,1,hours_b)
+    draw_digit(xofs,yofs,2,mins_a)
+    draw_digit(xofs,yofs,3,mins_b)
     
     if pm:
-        window_one.draw_big_text(232,47,"PM",8,14)
+        window_one.draw_text(PM_X+xofs,PM_Y+yofs,'PM',PM_COLOR)
 
     window_one.draw_screen_buffer()
     
-    time.sleep(10)
-
+    time.sleep(10)    
+    
+    xofs = xofs + dirx
+    if xofs>LIMITS[0]:
+        xofs = LIMITS[0]
+        dirx = -1
+    if xofs<0:
+        xofs = 0
+        dirx = 1
+        
+    yofs = yofs + diry
+    if yofs>LIMITS[1]:
+        yofs = LIMITS[1]
+        diry = -1
+    if yofs<0:
+        yofs = 0
+        diry = 1

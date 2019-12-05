@@ -12,8 +12,8 @@ python app_clock.py
 
 # 0,0 .. 124,25
 
-from OLED import OLED
-from OLEDWindow import OLEDWindow
+from oled.oled_pi import OLED
+from oled.oled_window import OLEDWindow
 import time
 import datetime
 

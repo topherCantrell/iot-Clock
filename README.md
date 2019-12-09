@@ -28,3 +28,11 @@ TODO
   - Text
   - Word clock
   - Type font
+  
+# Construction
+
+![](art/construct1.jpg)
+
+![](art/construct2.jpg)
+
+![](art/construct3.jpg)

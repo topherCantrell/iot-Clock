@@ -16,10 +16,12 @@ import tornado.ioloop
 import tornado.web
 
 import RPi.GPIO as GPIO
+from disp_binary import BinaryDisplay
 from disp_large7seg import Large7SegDisplay
 from disp_place_holder import PlaceHolder
 from oled.oled_pi import OLED
 from oled.oled_window import OLEDWindow
+
 
 # Singleton clock controller
 CLOCK = None
@@ -50,7 +52,7 @@ class Clock:
             self._display_ptr += 1
             if self._display_ptr >= len(self._displays):
                 self._display_ptr = 0
-        self._display = self._displays[self._display_ptr]
+        self._display = self._displays[self._display_ptr][1]
         self.update_time()
 
     def update_time(self):
@@ -105,13 +107,13 @@ if __name__ == '__main__':
     window = OLEDWindow(oled, 0, 0, 256, 64)
 
     displays = [
-        Large7SegDisplay(window),
-        PlaceHolder(window, 'Binary'),
-        PlaceHolder(window, 'Analog'),
-        PlaceHolder(window, 'Analog Roman'),
-        PlaceHolder(window, 'Tetris'),
-        PlaceHolder(window, 'Simple Text'),
-        PlaceHolder(window, 'Word'),
+        ('7 Segment', Large7SegDisplay(window)),
+        ('Binary', BinaryDisplay(window)),
+        ('Analog', PlaceHolder(window, 'Analog')),
+        ('Roman', PlaceHolder(window, 'Roman')),
+        ('Tetris', PlaceHolder(window, 'Tetris')),
+        ('Text', PlaceHolder(window, 'Text')),
+        ('Word', PlaceHolder(window, 'Word')),
     ]
 
     # TODO: this should persist in a config file
@@ -122,9 +124,9 @@ if __name__ == '__main__':
     }
 
     CLOCK = Clock(window, displays, config)
-    
+
     loop = tornado.ioloop.IOLoop.current()
-    
+
     # Make sure the button handler runs in the tornando I/O loop
     def _button_handler(_channel):
         loop.add_callback(CLOCK.button_pressed_cb)

@@ -35,6 +35,7 @@ class Clock:
         self._dirx = 1
         self._diry = 1
         self._config = config
+        self.set_display(config['display_num'])
 
     def button_pressed_cb(self):
         self.set_display()
@@ -49,6 +50,7 @@ class Clock:
             self._display_ptr += 1
             if self._display_ptr >= len(self._displays):
                 self._display_ptr = 0
+        self._display = self._displays[self._display_ptr]
         self.update_time()
 
     def update_time(self):
@@ -114,16 +116,18 @@ if __name__ == '__main__':
 
     # TODO: this should persist in a config file
     config = {
-        brightness: 15,
-        am_pm: True,
-        display_num: 0
+        'brightness': 15,
+        'am_pm': True,
+        'display_num': 0
     }
 
-    clock = Clock(window, displays, config)
-
+    CLOCK = Clock(window, displays, config)
+    
+    loop = tornado.ioloop.IOLoop.current()
+    
     # Make sure the button handler runs in the tornando I/O loop
     def _button_handler(_channel):
-        tornado.ioloop.IOLoop.current().add_callback(CLOCK.button_pressed_cb)
+        loop.add_callback(CLOCK.button_pressed_cb)
 
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_UP)
@@ -141,7 +145,7 @@ if __name__ == '__main__':
     # Every 10 seconds, update the display
     def _time_change():
         CLOCK.update_time()
-        tornado.ioloop.IOLoop.current().call_later(10, _time_change)
-    time_change()
+        loop.call_later(10, _time_change)
+    _time_change()
 
-    tornado.ioloop.IOLoop.current().start()
+    loop.start()

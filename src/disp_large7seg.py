@@ -41,8 +41,7 @@ class Large7SegDisplay(DisplayBase):
 
     def __init__(self, window):
         self._window = window
-        self._config = config
-
+        
     def _draw_colon(self, xofs, yofs):
         for num in range(2):
             x = Large7SegDisplay.COLON_OFS[num][0]
@@ -83,7 +82,7 @@ class Large7SegDisplay(DisplayBase):
         self._draw_colon(xofs, yofs)
 
         pm = False
-        if is_am_pm:
+        if config['am_pm']:
             if hours > 12:
                 hours = hours - 12
                 pm = True
@@ -93,7 +92,7 @@ class Large7SegDisplay(DisplayBase):
         mins_a = int(minutes / 10)
         mins_b = int(minutes % 10)
 
-        if config.am_pm:
+        if config['am_pm']:
             if pm:
                 self._window.draw_text(Large7SegDisplay.PM_X + xofs, Large7SegDisplay.PM_Y + yofs, 'PM', Large7SegDisplay.PM_COLOR)
             if hours_a > 0:

@@ -8,143 +8,140 @@ cd /home/pi/iot-clock/src
 python app_clock.py
 """
 
-# Maybe blink the colon ever so often to show running
-
-# 0,0 .. 124,25
-
-from oled.oled_pi import OLED
-from oled.oled_window import OLEDWindow
-import time
 import datetime
+import os
+import time
 
 import tornado.ioloop
 import tornado.web
-import os
-
-from disp_large7seg import Large7SegDisplay
-from disp_place_holder import PlaceHolder
 
 import RPi.GPIO as GPIO
+from disp_large7seg import Large7SegDisplay
+from disp_place_holder import PlaceHolder
+from oled.oled_pi import OLED
+from oled.oled_window import OLEDWindow
 
-# Button
-PIN_BUTTON = 23
+# Singleton clock controller
+CLOCK = None
 
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(PIN_BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-button_state = GPIO.input(PIN_BUTTON)
+class Clock:
 
-# The OLED hardware driver
-oled = OLED()
-window = OLEDWindow(oled,0,0,256,64)
+    def __init__(self, window, displays, config):
+        self._window = window
+        self._displays = displays
+        self._xofs = -1
+        self._yofs = -1
+        self._dirx = 1
+        self._diry = 1
+        self._config = config
 
-displays = [
-    Large7SegDisplay(window),
-    PlaceHolder(window,'Binary'),
-    PlaceHolder(window,'Analog'),
-    PlaceHolder(window,'Tetris'),
-    PlaceHolder(window,'Roman'),
-    PlaceHolder(window,'Text'),
-    PlaceHolder(window,'Word'),    
-]
+    def button_pressed_cb(self):
+        self.set_display()
 
-xofs = -1
-yofs = -1
-dirx = 1
-diry = 1
-display = None
+    def get_config(self):
+        return self._config
 
-display_ptr = 0
-display = displays[display_ptr]
+    def set_display(self, num=-1):
+        if num >= 0:
+            self._display_ptr = num
+        else:
+            self._display_ptr += 1
+            if self._display_ptr >= len(self._displays):
+                self._display_ptr = 0
+        self.update_time()
 
-second_count = 99
+    def update_time(self):
+        window_size = self._display.get_window_size()
+        limits = [256 - window_size[0], 64 - window_size[1]]
 
-def button_pressed(channel):
-    print('HERE')
-    
-GPIO.add_event_detect(PIN_BUTTON,GPIO.RISING,callback=button_pressed,bouncetime=200)
+        self._xofs += self._dirx
+        if self._xofs > limits[0]:
+            self._xofs = limits[0]
+            self._dirx = -1
+        if self._xofs < 0:
+            self._xofs = 0
+            self._dirx = 1
 
-def set_display_ptr(num=-1):
-    global second_count,button_state,display_ptr,display    
-    if num>=0:
-        display_ptr = num
-    else:
-        display_ptr +=1     
-        if display_ptr>=len(displays):
-            display_ptr = 0
-    second_count = 99
-    display = displays[display_ptr]   
+        self._yofs += self._diry
+        if self._yofs > limits[1]:
+            self._yofs = limits[1]
+            self._diry = -1
+        if self._yofs < 0:
+            self._yofs = 0
+            self._diry = 1
 
-def tenth_second():
-    global second_count,button_state
-    
-    bs = GPIO.input(PIN_BUTTON)    
-    if bs != button_state:
-        button_state = bs
-        if not bs:
-            set_display_ptr()
-    
-    second_count+=1
-    if second_count>=100:
-        second_count = 0
-        ten_second()
-    tornado.ioloop.IOLoop.current().call_later(delay=0.1,callback=tenth_second)
+        now = datetime.datetime.now()
 
-def ten_second():
-    global xofs, yofs, dirx, diry, display
-        
-    window_size = display.get_window_size()
-    limits = [256-window_size[0],64-window_size[1]]
-    
-    xofs = xofs + dirx
-    if xofs>limits[0]:
-        xofs = limits[0]
-        dirx = -1
-    if xofs<0:
-        xofs = 0
-        dirx = 1
-        
-    yofs = yofs + diry
-    if yofs>limits[1]:
-        yofs = limits[1]
-        diry = -1
-    if yofs<0:
-        yofs = 0
-        diry = 1
-        
-    now = datetime.datetime.now()    
-     
-    hours = now.hour
-    mins = now.minute
-    secs = now.second
-    
-    window.clear()        
-    display.make_time(xofs,yofs,hours,mins,secs,True)
-    window.draw_screen_buffer()
+        hours = now.hour
+        mins = now.minute
+        secs = now.second
+
+        self._window.clear()
+        self._display.make_time(self._xofs, self._yofs, hours, mins, secs, self._config)
+        self._window.draw_screen_buffer()
 
 
 class ClockHandler(tornado.web.RequestHandler):
-    
-    def get(self):               
+
+    def get(self):
         self.write("Hello")
         # Return JSON: brightness, list-of-displays, current-display
-        
-    def post(self):  
-        global second_count,display,display_ptr
-        self.write("HelloPost")      
+
+    def post(self):
+        global second_count, display, display_ptr
+        self.write("HelloPost")
         # Brightnes, current-display
         second_count = 99
-        tornado.ioloop.IOLoop.current().call_later(delay=0.1,callback=tenth_second) 
-  
-root = os.path.join(os.path.dirname(__file__), "webroot")
+        tornado.ioloop.IOLoop.current().call_later(delay=0.1, callback=tenth_second)
 
-handlers = [
-    (r"/cgi/(.*)", ClockHandler),        
-    (r"/(.*)", tornado.web.StaticFileHandler, {"path": root, "default_filename": "index.html"}),
+
+if __name__ == '__main__':
+
+    # The OLED hardware driver
+    oled = OLED()
+    window = OLEDWindow(oled, 0, 0, 256, 64)
+
+    displays = [
+        Large7SegDisplay(window),
+        PlaceHolder(window, 'Binary'),
+        PlaceHolder(window, 'Analog'),
+        PlaceHolder(window, 'Analog Roman'),
+        PlaceHolder(window, 'Tetris'),
+        PlaceHolder(window, 'Simple Text'),
+        PlaceHolder(window, 'Word'),
     ]
 
-app = tornado.web.Application(handlers)
-app.listen(80)
-tenth_second()
-tornado.ioloop.IOLoop.current().start()
+    # TODO: this should persist in a config file
+    config = {
+        brightness: 15,
+        am_pm: True,
+        display_num: 0
+    }
 
+    clock = Clock(window, displays, config)
+
+    # Make sure the button handler runs in the tornando I/O loop
+    def _button_handler(_channel):
+        tornado.ioloop.IOLoop.current().add_callback(CLOCK.button_pressed_cb)
+
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.add_event_detect(23, GPIO.RISING, callback=_button_handler, bouncetime=200)
+
+    root = os.path.join(os.path.dirname(__file__), "webroot")
+    handlers = [
+        (r"/cgi/(.*)", ClockHandler),
+        (r"/(.*)", tornado.web.StaticFileHandler, {"path": root, "default_filename": "index.html"}),
+    ]
+
+    app = tornado.web.Application(handlers)
+    app.listen(80)
+
+    # Every 10 seconds, update the display
+    def _time_change():
+        CLOCK.update_time()
+        tornado.ioloop.IOLoop.current().call_later(10, _time_change)
+    time_change()
+
+    tornado.ioloop.IOLoop.current().start()

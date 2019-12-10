@@ -17,7 +17,12 @@ from oled.oled_window import OLEDWindow
 import time
 import datetime
 
+import tornado.ioloop
+import tornado.web
+import os
+
 from disp_large7seg import Large7SegDisplay
+from disp_place_holder import PlaceHolder
 
 import RPi.GPIO as GPIO
 
@@ -26,7 +31,8 @@ PIN_BUTTON = 23
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(PIN_BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.input(PIN_BUTTON)
+
+button_state = GPIO.input(PIN_BUTTON)
 
 # The OLED hardware driver
 oled = OLED()
@@ -34,6 +40,12 @@ window = OLEDWindow(oled,0,0,256,64)
 
 displays = [
     Large7SegDisplay(window),
+    PlaceHolder(window,'Binary'),
+    PlaceHolder(window,'Analog'),
+    PlaceHolder(window,'Tetris'),
+    PlaceHolder(window,'Roman'),
+    PlaceHolder(window,'Text'),
+    PlaceHolder(window,'Word'),    
 ]
 
 xofs = -1
@@ -41,21 +53,46 @@ yofs = -1
 dirx = 1
 diry = 1
 display = None
-    
-def set_display(num):
-    global xofs,yofs,dirx,diry,display
-    display = displays[num]    
 
 display_ptr = 0
-set_display(display_ptr)
+display = displays[display_ptr]
 
-# TODO: different screen-saver algorithms
+second_count = 99
 
-# TODO: pick a display implementation (button press)
-# TODO: press button to show info (IP address)
-
-while True:
+def button_pressed(channel):
+    print('HERE')
     
+GPIO.add_event_detect(PIN_BUTTON,GPIO.RISING,callback=button_pressed,bouncetime=200)
+
+def set_display_ptr(num=-1):
+    global second_count,button_state,display_ptr,display    
+    if num>=0:
+        display_ptr = num
+    else:
+        display_ptr +=1     
+        if display_ptr>=len(displays):
+            display_ptr = 0
+    second_count = 99
+    display = displays[display_ptr]   
+
+def tenth_second():
+    global second_count,button_state
+    
+    bs = GPIO.input(PIN_BUTTON)    
+    if bs != button_state:
+        button_state = bs
+        if not bs:
+            set_display_ptr()
+    
+    second_count+=1
+    if second_count>=100:
+        second_count = 0
+        ten_second()
+    tornado.ioloop.IOLoop.current().call_later(delay=0.1,callback=tenth_second)
+
+def ten_second():
+    global xofs, yofs, dirx, diry, display
+        
     window_size = display.get_window_size()
     limits = [256-window_size[0],64-window_size[1]]
     
@@ -84,7 +121,30 @@ while True:
     window.clear()        
     display.make_time(xofs,yofs,hours,mins,secs,True)
     window.draw_screen_buffer()
-                    
-    # Sleep loop 0.1 sec here and watch button
-    time.sleep(10)        
+
+
+class ClockHandler(tornado.web.RequestHandler):
     
+    def get(self):               
+        self.write("Hello")
+        # Return JSON: brightness, list-of-displays, current-display
+        
+    def post(self):  
+        global second_count,display,display_ptr
+        self.write("HelloPost")      
+        # Brightnes, current-display
+        second_count = 99
+        tornado.ioloop.IOLoop.current().call_later(delay=0.1,callback=tenth_second) 
+  
+root = os.path.join(os.path.dirname(__file__), "webroot")
+
+handlers = [
+    (r"/cgi/(.*)", ClockHandler),        
+    (r"/(.*)", tornado.web.StaticFileHandler, {"path": root, "default_filename": "index.html"}),
+    ]
+
+app = tornado.web.Application(handlers)
+app.listen(80)
+tenth_second()
+tornado.ioloop.IOLoop.current().start()
+

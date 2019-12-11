@@ -37,6 +37,8 @@ class WordDisplay(DisplayBase):
 
         # Round minutes to nearest 5
         minutes = 5 * round(minutes/5)
+        if minutes>55:
+            minutes=0            
         mins = WordDisplay.MINUTE_OFFSET[int(minutes/5)]
         
         if minutes==0:

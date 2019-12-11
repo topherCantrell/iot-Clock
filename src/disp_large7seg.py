@@ -5,15 +5,13 @@ class Large7SegDisplay(DisplayBase):
 
     SEG_LENGTH = 18
     SEG_WIDTH = 3
-    SEG_COLOR = 15
-
+    
     COLON_SIZE = 3
     COLON_COLOR = 8
 
     PM_X = (SEG_LENGTH + SEG_LENGTH + 10) * 2 + 27
     PM_Y = SEG_LENGTH * 2 - 5
-    PM_COLOR = 15
-
+    
     DIGIT_OFS = [
         [0, 0],
         [SEG_LENGTH + 10, 0],
@@ -42,15 +40,15 @@ class Large7SegDisplay(DisplayBase):
     def __init__(self, window):
         self._window = window
         
-    def _draw_colon(self, xofs, yofs):
+    def _draw_colon(self, xofs, yofs,config):
         for num in range(2):
             x = Large7SegDisplay.COLON_OFS[num][0]
             y = Large7SegDisplay.COLON_OFS[num][1]
             self._window.DrawBox(x + xofs, y + yofs, Large7SegDisplay.COLON_SIZE,
                                  Large7SegDisplay.COLON_SIZE,
-                                 Large7SegDisplay.COLON_COLOR)
+                                 config['brightness'])
 
-    def _draw_digit(self, xofs, yofs, num, value):
+    def _draw_digit(self, xofs, yofs, num, value,config):
 
         # clockwise from top: a,b,c,d,e,f, and g in middle
 
@@ -60,26 +58,26 @@ class Large7SegDisplay(DisplayBase):
         y = Large7SegDisplay.DIGIT_OFS[num][1]
 
         if 'a' in segs:
-            self._window.DrawBox(x + xofs + 1, y + yofs + 0, Large7SegDisplay.SEG_LENGTH, Large7SegDisplay.SEG_WIDTH, Large7SegDisplay.SEG_COLOR)  # a
+            self._window.DrawBox(x + xofs + 1, y + yofs + 0, Large7SegDisplay.SEG_LENGTH, Large7SegDisplay.SEG_WIDTH, config['brightness'])  # a
         if 'b' in segs:
-            self._window.DrawBox(x + xofs + Large7SegDisplay.SEG_LENGTH - 1, y + yofs + 1, Large7SegDisplay.SEG_WIDTH, Large7SegDisplay.SEG_LENGTH, Large7SegDisplay.SEG_COLOR)  # b
+            self._window.DrawBox(x + xofs + Large7SegDisplay.SEG_LENGTH - 1, y + yofs + 1, Large7SegDisplay.SEG_WIDTH, Large7SegDisplay.SEG_LENGTH, config['brightness'])  # b
         if 'c' in segs:
-            self._window.DrawBox(x + xofs + Large7SegDisplay.SEG_LENGTH - 1, y + yofs + Large7SegDisplay.SEG_LENGTH + 2, Large7SegDisplay.SEG_WIDTH, Large7SegDisplay.SEG_LENGTH, Large7SegDisplay.SEG_COLOR)  # c
+            self._window.DrawBox(x + xofs + Large7SegDisplay.SEG_LENGTH - 1, y + yofs + Large7SegDisplay.SEG_LENGTH + 2, Large7SegDisplay.SEG_WIDTH, Large7SegDisplay.SEG_LENGTH, config['brightness'])  # c
         if 'd' in segs:
-            self._window.DrawBox(x + xofs + 1, y + yofs + Large7SegDisplay.SEG_LENGTH * 2, Large7SegDisplay.SEG_LENGTH, Large7SegDisplay.SEG_WIDTH, Large7SegDisplay.SEG_COLOR)  # d
+            self._window.DrawBox(x + xofs + 1, y + yofs + Large7SegDisplay.SEG_LENGTH * 2, Large7SegDisplay.SEG_LENGTH, Large7SegDisplay.SEG_WIDTH, config['brightness'])  # d
         if 'e' in segs:
-            self._window.DrawBox(x + xofs + 0, y + yofs + Large7SegDisplay.SEG_LENGTH + 2, Large7SegDisplay.SEG_WIDTH, Large7SegDisplay.SEG_LENGTH, Large7SegDisplay.SEG_COLOR)  # e
+            self._window.DrawBox(x + xofs + 0, y + yofs + Large7SegDisplay.SEG_LENGTH + 2, Large7SegDisplay.SEG_WIDTH, Large7SegDisplay.SEG_LENGTH, config['brightness'])  # e
         if 'f' in segs:
-            self._window.DrawBox(x + xofs + 0, y + yofs + 1, Large7SegDisplay.SEG_WIDTH, Large7SegDisplay.SEG_LENGTH, Large7SegDisplay.SEG_COLOR)  # f
+            self._window.DrawBox(x + xofs + 0, y + yofs + 1, Large7SegDisplay.SEG_WIDTH, Large7SegDisplay.SEG_LENGTH, config['brightness'])  # f
         if 'g' in segs:
-            self._window.DrawBox(x + xofs + 1, y + yofs + Large7SegDisplay.SEG_LENGTH, Large7SegDisplay.SEG_LENGTH, Large7SegDisplay.SEG_WIDTH, Large7SegDisplay.SEG_COLOR)  # g
+            self._window.DrawBox(x + xofs + 1, y + yofs + Large7SegDisplay.SEG_LENGTH, Large7SegDisplay.SEG_LENGTH, Large7SegDisplay.SEG_WIDTH, config['brightness'])  # g
 
     def get_window_size(self):
         return (132, 40)
 
     def make_time(self, xofs, yofs, hours, minutes, _seconds, config):
 
-        self._draw_colon(xofs, yofs)
+        self._draw_colon(xofs, yofs,config)
 
         pm = False
         if config['am_pm']:
@@ -94,12 +92,12 @@ class Large7SegDisplay(DisplayBase):
 
         if config['am_pm']:
             if pm:
-                self._window.draw_text(Large7SegDisplay.PM_X + xofs, Large7SegDisplay.PM_Y + yofs, 'PM', Large7SegDisplay.PM_COLOR)
+                self._window.draw_text(Large7SegDisplay.PM_X + xofs, Large7SegDisplay.PM_Y + yofs, 'PM', config['brightness'])
             if hours_a > 0:
-                self._draw_digit(xofs, yofs, 0, hours_a)
+                self._draw_digit(xofs, yofs, 0, hours_a,config)
         else:
-            self._draw_digit(xofs, yofs, 0, hours_a)
+            self._draw_digit(xofs, yofs, 0, hours_a,config)
 
-        self._draw_digit(xofs, yofs, 1, hours_b)
-        self._draw_digit(xofs, yofs, 2, mins_a)
-        self._draw_digit(xofs, yofs, 3, mins_b)
+        self._draw_digit(xofs, yofs, 1, hours_b,config)
+        self._draw_digit(xofs, yofs, 2, mins_a,config)
+        self._draw_digit(xofs, yofs, 3, mins_b,config)

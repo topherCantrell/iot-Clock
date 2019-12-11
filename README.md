@@ -20,13 +20,20 @@ TODO
 
 # Display implementations
 
-  - Large 7 segment
-  - Binary
+## 7 Segment
+![](art/dispSeg.jpg)
+
+## Binary
+![](art/dispBinary.jpg)
+
+## Word
+![](art/dispWord.jpg)
+
+## TODO
   - Analog
   - Tetris
   - Roman
   - Text
-  - Word clock
   - Type font
   
 # Construction

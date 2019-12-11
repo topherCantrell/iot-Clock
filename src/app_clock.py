@@ -19,9 +19,9 @@ import RPi.GPIO as GPIO
 from disp_binary import BinaryDisplay
 from disp_large7seg import Large7SegDisplay
 from disp_place_holder import PlaceHolder
+from disp_word import WordDisplay
 from oled.oled_pi import OLED
 from oled.oled_window import OLEDWindow
-
 
 # Singleton clock controller
 CLOCK = None
@@ -41,7 +41,10 @@ class Clock:
 
     def button_pressed_cb(self):
         self.set_display()
-
+        
+    def get_displays(self):
+        return self._displays
+        
     def get_config(self):
         return self._config
 
@@ -88,16 +91,51 @@ class Clock:
 
 class ClockHandler(tornado.web.RequestHandler):
 
+    def _get_json(self):
+        config = CLOCK.get_config()
+        disps = []
+        for item in CLOCK.get_displays():
+            disps.append(item[0])
+        ret = {
+            'displays' : disps,
+            'display_num' : config['display_num'],
+            'brightness' : config['brightness'],
+            'am_pm' : config['am_pm'],            
+        }
+        return ret
+        
     def get(self):
-        self.write("Hello")
-        # Return JSON: brightness, list-of-displays, current-display
-
-    def post(self):
-        global second_count, display, display_ptr
-        self.write("HelloPost")
-        # Brightnes, current-display
-        second_count = 99
-        tornado.ioloop.IOLoop.current().call_later(delay=0.1, callback=tenth_second)
+        
+        # display_num : 0-N
+        # brightness : 0-15
+        # am_pm : true/false
+        
+        display_num = self.get_argument('display_num',None)
+        brightness = self.get_argument('brightness',None)
+        am_pm = self.get_argument('am_pm',None)
+        
+        changes = False
+        
+        if display_num is not None:
+            config['display_num'] = int(display_num)
+            changes = True
+        
+        if brightness is not None:
+            config['brightness'] = int(brightness)
+            changes = True
+            
+        if am_pm is not None:
+            if am_pm.upper().startswith('T'):
+                config['am_pm'] = True
+            else:
+                config['am_pm'] = False
+            changes = True
+                
+        if changes:
+            loop.add_callback(CLOCK.set_display,config['display_num'])
+            
+        self.set_header('Content-Type','application/json')        
+        self.write(self._get_json())
 
 
 if __name__ == '__main__':
@@ -107,13 +145,15 @@ if __name__ == '__main__':
     window = OLEDWindow(oled, 0, 0, 256, 64)
 
     displays = [
-        ('7 Segment', Large7SegDisplay(window)),
+        ('Word', WordDisplay(window)),
         ('Binary', BinaryDisplay(window)),
+        ('7 Segment', Large7SegDisplay(window)),
+        
         ('Analog', PlaceHolder(window, 'Analog')),
         ('Roman', PlaceHolder(window, 'Roman')),
         ('Tetris', PlaceHolder(window, 'Tetris')),
         ('Text', PlaceHolder(window, 'Text')),
-        ('Word', PlaceHolder(window, 'Word')),
+        
     ]
 
     # TODO: this should persist in a config file
@@ -133,11 +173,11 @@ if __name__ == '__main__':
 
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.add_event_detect(23, GPIO.RISING, callback=_button_handler, bouncetime=200)
+    GPIO.add_event_detect(23, GPIO.FALLING, callback=_button_handler, bouncetime=500)
 
     root = os.path.join(os.path.dirname(__file__), "webroot")
     handlers = [
-        (r"/cgi/(.*)", ClockHandler),
+        (r"/clock", ClockHandler),
         (r"/(.*)", tornado.web.StaticFileHandler, {"path": root, "default_filename": "index.html"}),
     ]
 

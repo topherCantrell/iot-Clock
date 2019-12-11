@@ -111,6 +111,8 @@ class SATDisplay(DisplayBase):
         mins = mins % 60
 
         # TODO seconds
+        
+        live = True
 
         return (days, hours, mins, live)
 
@@ -129,11 +131,11 @@ class SATDisplay(DisplayBase):
         if len(hours) < 2:
             hours = ' ' + hours
 
-        self._window.draw_image(0, 0, 64, 64, data)
+        self._window.draw_image(0, 0, 64, 64, SATDisplay.data)
         self._window.draw_text(68, 5 + 6, 'Next show in:', 15)
-        self._window.draw_text(68, 20 + 6, days + 'Days', 15)
-        self._window.draw_text(68, 30 + 6, hours + 'Hours', 15)
-        self._window.draw_text(68, 40 + 6, minutes + 'Minutes', 15)
+        self._window.draw_text(68, 20 + 6, days + ' Days', 15)
+        self._window.draw_text(68, 30 + 6, hours + ' Hours', 15)
+        self._window.draw_text(68, 40 + 6, minutes + ' Minutes', 15)
 
         if live:
             self._window.DrawBox(193, 44, 16 * 4 - 3, 18, 15)

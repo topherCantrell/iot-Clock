@@ -29,6 +29,9 @@ TODO
 ## Word
 ![](art/dispWord.jpg)
 
+## S&T
+![](art/dispSAT.jpg)
+
 ## TODO
   - Analog
   - Tetris

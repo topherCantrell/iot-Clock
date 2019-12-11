@@ -20,6 +20,7 @@ from disp_binary import BinaryDisplay
 from disp_large7seg import Large7SegDisplay
 from disp_place_holder import PlaceHolder
 from disp_word import WordDisplay
+from disp_sat import SATDisplay
 from oled.oled_pi import OLED
 from oled.oled_window import OLEDWindow
 
@@ -145,6 +146,7 @@ if __name__ == '__main__':
     window = OLEDWindow(oled, 0, 0, 256, 64)
 
     displays = [
+        ('S&T', SATDisplay(window)),
         ('Word', WordDisplay(window)),
         ('Binary', BinaryDisplay(window)),
         ('7 Segment', Large7SegDisplay(window)),

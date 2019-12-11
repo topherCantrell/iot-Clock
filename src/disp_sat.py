@@ -80,9 +80,11 @@ class SATDisplay(DisplayBase):
 
         now = datetime.datetime.now()
 
-        DAY = 2
-        HOUR = 18
+        DAY = 2   # Wednesdays
+        HOUR = 18  # 6
         MIN = 30
+
+        live = False
 
         if now.weekday() == DAY:
             if now.hour == HOUR and now.minute < MIN:
@@ -93,6 +95,9 @@ class SATDisplay(DisplayBase):
                 days = 7
         else:
             days = (DAY - now.weekday() + 7) % 7
+
+        if now.weekday() == DAY and now.hour == HOUR and now.minute >= MIN and now.minute < (MIN + 20):
+            live = True
 
         next_date = now + datetime.timedelta(days=days)
         next_date = next_date.replace(hour=HOUR)
@@ -105,11 +110,31 @@ class SATDisplay(DisplayBase):
         hours = int(mins / 60)
         mins = mins % 60
 
-        return (days, hours, mins)
+        # TODO seconds
+
+        return (days, hours, mins, live)
 
     def make_time(self, xofs, yofs, _hours, _minutes, _seconds, config):
 
-        # (255-sample)+8
         self._window.draw_image(0, 0, 64, 64, SATDisplay.data)
 
-        days, hours, minutes = self.get_time_until_next()
+        days, hours, minutes, live = self.get_time_until_next()
+        days = str(days)
+        hours = str(hours)
+        minutes = str(minutes)
+        if len(days) < 2:
+            days = ' ' + days
+        if len(minutes) < 2:
+            minutes = ' ' + minutes
+        if len(hours) < 2:
+            hours = ' ' + hours
+
+        self._window.draw_image(0, 0, 64, 64, data)
+        self._window.draw_text(68, 5 + 6, 'Next show in:', 15)
+        self._window.draw_text(68, 20 + 6, days + 'Days', 15)
+        self._window.draw_text(68, 30 + 6, hours + 'Hours', 15)
+        self._window.draw_text(68, 40 + 6, minutes + 'Minutes', 15)
+
+        if live:
+            self._window.DrawBox(193, 44, 16 * 4 - 3, 18, 15)
+            self._window.draw_big_text(195, 46, 'LIVE', 15, 14, invert=True)

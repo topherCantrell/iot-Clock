@@ -39,6 +39,10 @@ TODO
   - Text
   - Type font
   
+# Web Interface
+
+![](art/web.jpg)
+  
 # Construction
 
 ![](art/construct1.jpg)

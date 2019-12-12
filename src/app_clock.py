@@ -9,7 +9,6 @@ python app_clock.py
 """
 
 import datetime
-from idlelib import zoomheight
 import os
 import time
 
@@ -24,7 +23,7 @@ from disp_word import WordDisplay
 from oled.oled_window import OLEDWindow
 
 
-ON_HARDWARE = False
+ON_HARDWARE = True
 
 if ON_HARDWARE:
     import RPi.GPIO as GPIO
@@ -69,12 +68,12 @@ class Clock:
 
     def set_display(self, num=-1):
         if num >= 0:
-            self._display_ptr = num
+            self._config['display_num'] = num
         else:
-            self._display_ptr += 1
-            if self._display_ptr >= len(self._displays):
-                self._display_ptr = 0
-        self._display = self._displays[self._display_ptr][1]
+            self._config['display_num'] += 1
+            if self._config['display_num'] >= len(self._displays):
+                self._config['display_num'] = 0
+        self._display = self._displays[self._config['display_num']][1]
         self.update_time()
 
     def update_time(self):
@@ -120,7 +119,7 @@ class ClockHandler(tornado.web.RequestHandler):
             'display_num': config['display_num'],
             'brightness': config['brightness'],
             'am_pm': config['am_pm'],
-        }
+        }        
         return ret
 
     def get(self):

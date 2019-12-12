@@ -9,23 +9,41 @@ python app_clock.py
 """
 
 import datetime
+from idlelib import zoomheight
 import os
 import time
 
 import tornado.ioloop
 import tornado.web
 
-import RPi.GPIO as GPIO
 from disp_binary import BinaryDisplay
 from disp_large7seg import Large7SegDisplay
 from disp_place_holder import PlaceHolder
-from disp_word import WordDisplay
 from disp_sat import SATDisplay
-from oled.oled_pi import OLED
+from disp_word import WordDisplay
 from oled.oled_window import OLEDWindow
+
+
+ON_HARDWARE = False
+
+if ON_HARDWARE:
+    import RPi.GPIO as GPIO
+    from oled.oled_pi import OLED
+
 
 # Singleton clock controller
 CLOCK = None
+
+
+class StubOLED:
+    def set_data_window(self, x, y, width, height):
+        pass
+
+    def Write_Instruction(self, data):
+        pass
+
+    def writeDataBytes(self, data):
+        pass
 
 
 class Clock:
@@ -42,10 +60,10 @@ class Clock:
 
     def button_pressed_cb(self):
         self.set_display()
-        
+
     def get_displays(self):
         return self._displays
-        
+
     def get_config(self):
         return self._config
 
@@ -98,51 +116,54 @@ class ClockHandler(tornado.web.RequestHandler):
         for item in CLOCK.get_displays():
             disps.append(item[0])
         ret = {
-            'displays' : disps,
-            'display_num' : config['display_num'],
-            'brightness' : config['brightness'],
-            'am_pm' : config['am_pm'],            
+            'displays': disps,
+            'display_num': config['display_num'],
+            'brightness': config['brightness'],
+            'am_pm': config['am_pm'],
         }
         return ret
-        
+
     def get(self):
-        
+
         # display_num : 0-N
         # brightness : 0-15
         # am_pm : true/false
-        
-        display_num = self.get_argument('display_num',None)
-        brightness = self.get_argument('brightness',None)
-        am_pm = self.get_argument('am_pm',None)
-        
+
+        display_num = self.get_argument('display_num', None)
+        brightness = self.get_argument('brightness', None)
+        am_pm = self.get_argument('am_pm', None)
+
         changes = False
-        
+
         if display_num is not None:
             config['display_num'] = int(display_num)
             changes = True
-        
+
         if brightness is not None:
             config['brightness'] = int(brightness)
             changes = True
-            
+
         if am_pm is not None:
             if am_pm.upper().startswith('T'):
                 config['am_pm'] = True
             else:
                 config['am_pm'] = False
             changes = True
-                
+
         if changes:
-            loop.add_callback(CLOCK.set_display,config['display_num'])
-            
-        self.set_header('Content-Type','application/json')        
+            loop.add_callback(CLOCK.set_display, config['display_num'])
+
+        self.set_header('Content-Type', 'application/json')
         self.write(self._get_json())
 
 
 if __name__ == '__main__':
 
     # The OLED hardware driver
-    oled = OLED()
+    if ON_HARDWARE:
+        oled = OLED()
+    else:
+        oled = StubOLED()
     window = OLEDWindow(oled, 0, 0, 256, 64)
 
     displays = [
@@ -150,12 +171,12 @@ if __name__ == '__main__':
         ('Word', WordDisplay(window)),
         ('Binary', BinaryDisplay(window)),
         ('7 Segment', Large7SegDisplay(window)),
-        
+
         ('Analog', PlaceHolder(window, 'Analog')),
         ('Roman', PlaceHolder(window, 'Roman')),
         ('Tetris', PlaceHolder(window, 'Tetris')),
         ('Text', PlaceHolder(window, 'Text')),
-        
+
     ]
 
     # TODO: this should persist in a config file
@@ -173,9 +194,10 @@ if __name__ == '__main__':
     def _button_handler(_channel):
         loop.add_callback(CLOCK.button_pressed_cb)
 
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.add_event_detect(23, GPIO.FALLING, callback=_button_handler, bouncetime=500)
+    if ON_HARDWARE:
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.add_event_detect(23, GPIO.FALLING, callback=_button_handler, bouncetime=500)
 
     root = os.path.join(os.path.dirname(__file__), "webroot")
     handlers = [
@@ -184,7 +206,10 @@ if __name__ == '__main__':
     ]
 
     app = tornado.web.Application(handlers)
-    app.listen(80)
+    if ON_HARDWARE:
+        app.listen(80)
+    else:
+        app.listen(8080)
 
     # Every 10 seconds, update the display
     def _time_change():

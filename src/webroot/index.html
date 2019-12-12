@@ -1,1 +1,69 @@
-Hello World
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">  
+  <title>IOT Clock</title>    
+  
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">  
+  
+</head>
+
+<body>
+
+<div class="container-fluid">
+
+    <div class="row">
+        <div class="col-sm-12">
+            <h1>IOT Clock</h1>
+        </div>
+    </div>
+    
+    <div class="row" >
+	<div class="col-sm-2">		
+	  <div class="form-group">
+	    <label for="viewer_name">Brightness</label>
+	    <input type="number" min="1" max="15" class="form-control" id="sipServer" name='sip_server'>
+	  </div>	  
+	</div>
+	</div>
+	
+	<div class="row" >
+	<div class="col-sm-12">		
+	  <div class="form-group">
+	    <label>Time Mode</label>
+	    <br>
+	    <input type="radio" id="am_pm" name="mode" value="am_pm">
+  		<label for="am_pm">AM/PM</label>
+  		<br>
+  		<input type="radio" id="24_hour" name="mode" value="24_hour">
+        <label for="24_hour">24 Hour</label>
+	  </div>	  
+	</div>
+	</div>
+	
+	<div class="row" >
+	<div class="col-sm-12">		
+	  <div class="form-group">
+	    <label>Display</label>
+	    <br>
+	    <input type="radio" id="am_pm" name="mode" value="am_pm">
+  		<label for="am_pm">Word</label>
+  		<br>
+  		<input type="radio" id="24_hour" name="mode" value="24_hour">
+        <label for="24_hour">Analog</label>
+	  </div>	  
+	</div>
+	</div>
+	
+	
+
+
+</div>
+
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+</body>
+
+</html>

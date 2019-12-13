@@ -22,25 +22,36 @@ class WordDisplay(DisplayBase):
         self._window = window
 
     def get_window_size(self):
+        # This is how big the display is
         return (16 * 8, 8 * 8)
 
     def make_time(self, xofs, yofs, hours, minutes, _seconds, config):
 
-        if hours >= 12:
-            hours = hours - 12
-
-        hr = WordDisplay.HOURS[hours]
+        # Print one of these phrases:
 
         # IT IS hour O'CLOCK
         # IT IS FIVE/TEN/A_QUARTER/TWENTY/TWENTY_FIVE/HALF PAST hour O'CLOCK
-        # IT IS FIVE/TEN/A_QUARTER/TWENTY/TWENTY_FIVE TO (hour+1) O'CLOCK
+        # IT IS FIVE/TEN/A_QUARTER/TWENTY/TWENTY_FIVE TO next_hour O'CLOCK
 
         # Round minutes to nearest 5
         minutes = 5 * round(minutes / 5)
-        if minutes > 55:
+        if minutes > 55:  # Round up to the next hour
             minutes = 0
+            hours = hours + 1
+
+        # No words for AM/PM. Limit hour to 0-11.
+        if hours >= 12:
+            hours = hours - 12
+
+        # Word for the hours
+        hr = WordDisplay.HOURS[hours]  # Word for this hour
+        hr_next = WordDisplay.HOURS[hours + 1]  # Word for next hour
+
+        # Word(s) for the minutes
         mins = WordDisplay.MINUTE_OFFSET[int(minutes / 5)]
 
+        # Pick the correct phrase based on the minutes. Either on the hour, past the hour,
+        # or to the next hour.
         if minutes == 0:
             phrase = f'IT IS {hr} O\'CLOCK'
         elif minutes <= 30:
@@ -48,13 +59,18 @@ class WordDisplay(DisplayBase):
         else:
             phrase = f'IT IS {mins} TO {hr+1} O\'CLOCK'
 
+        # List of words to light up
         phrase = phrase.split(' ')
 
         for word in WordDisplay.WORD_COORDS:
+            # Get the coordinates for the word
             coords = WordDisplay.WORD_COORDS[word]
+            # Underscores become printed spaces
             display_text = word.replace('_', ' ')
             if word in phrase:
+                # This word is part of the phrase ... print it bright
                 color = config['brightness']
             else:
+                # This word is NOT part of the phrase ... print it dim
                 color = 1
             self._window.draw_text(xofs + coords[0] * 8, yofs + coords[1] * 8, display_text, color)

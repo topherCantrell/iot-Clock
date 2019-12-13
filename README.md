@@ -38,6 +38,7 @@ TODO
   - Roman
   - Text
   - Type font
+  - Potty mouth
   
 # Web Interface
 

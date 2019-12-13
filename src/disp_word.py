@@ -15,17 +15,17 @@ class WordDisplay(DisplayBase):
     }
 
     MINUTE_OFFSET = ['', 'FIVE MINUTES', 'TEN MINUTES', 'A_QUARTER', 'TWENTY MINUTES', 'TWENTY FIVE MINUTES', 'HALF',
-                     'TWENTY FIVE MINUTES','TWENTY MINUTES','A_QUARTER','TEN MINUTES','FIVE MINUTES']
-    HOURS = ['TWELVE', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE_', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN_', 'ELEVEN']
+                     'TWENTY FIVE MINUTES', 'TWENTY MINUTES', 'A_QUARTER', 'TEN MINUTES', 'FIVE MINUTES']
+    HOURS = ['TWELVE', 'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE_', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'TEN_', 'ELEVEN', 'TWELVE']
 
     def __init__(self, window):
         self._window = window
 
     def get_window_size(self):
         return (16 * 8, 8 * 8)
-    
+
     def make_time(self, xofs, yofs, hours, minutes, _seconds, config):
-              
+
         if hours >= 12:
             hours = hours - 12
 
@@ -33,23 +33,21 @@ class WordDisplay(DisplayBase):
 
         # IT IS hour O'CLOCK
         # IT IS FIVE/TEN/A_QUARTER/TWENTY/TWENTY_FIVE/HALF PAST hour O'CLOCK
-        # IT IS FIVE/TEN/A_QUARTER/TWENTY/TWENTY_FIVE TO hour O'CLOCK
+        # IT IS FIVE/TEN/A_QUARTER/TWENTY/TWENTY_FIVE TO (hour+1) O'CLOCK
 
         # Round minutes to nearest 5
-        minutes = 5 * round(minutes/5)
-        if minutes>55:
-            minutes=0            
-        mins = WordDisplay.MINUTE_OFFSET[int(minutes/5)]
-        
-        if minutes==0:
+        minutes = 5 * round(minutes / 5)
+        if minutes > 55:
+            minutes = 0
+        mins = WordDisplay.MINUTE_OFFSET[int(minutes / 5)]
+
+        if minutes == 0:
             phrase = f'IT IS {hr} O\'CLOCK'
-        elif minutes<=30:
+        elif minutes <= 30:
             phrase = f'IT IS {mins} PAST {hr} O\'CLOCK'
         else:
-            phrase = f'IT IS {mins} TO {hr} O\'CLOCK'
-            
-        #print(phrase)
-        
+            phrase = f'IT IS {mins} TO {hr+1} O\'CLOCK'
+
         phrase = phrase.split(' ')
 
         for word in WordDisplay.WORD_COORDS:
@@ -59,4 +57,4 @@ class WordDisplay(DisplayBase):
                 color = config['brightness']
             else:
                 color = 1
-            self._window.draw_text(xofs+coords[0] * 8, yofs+coords[1] * 8, display_text, color)
+            self._window.draw_text(xofs + coords[0] * 8, yofs + coords[1] * 8, display_text, color)

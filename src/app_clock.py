@@ -166,16 +166,14 @@ if __name__ == '__main__':
     window = OLEDWindow(oled, 0, 0, 256, 64)
 
     displays = [
+        ('7 Segment', Large7SegDisplay(window)),                 
+        ('Binary', BinaryDisplay(window)),        
+        ('Word', WordDisplay(window)),       
         ('S&T', SATDisplay(window)),
-        ('Word', WordDisplay(window)),
-        ('Binary', BinaryDisplay(window)),
-        ('7 Segment', Large7SegDisplay(window)),
-
         ('Analog', PlaceHolder(window, 'Analog')),
         ('Roman', PlaceHolder(window, 'Roman')),
         ('Tetris', PlaceHolder(window, 'Tetris')),
-        ('Text', PlaceHolder(window, 'Text')),
-
+        #('Text', PlaceHolder(window, 'Text')),
     ]
 
     # TODO: this should persist in a config file

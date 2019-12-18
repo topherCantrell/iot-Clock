@@ -57,7 +57,7 @@ class WordDisplay(DisplayBase):
         elif minutes <= 30:
             phrase = f'IT IS {mins} PAST {hr} O\'CLOCK'
         else:
-            phrase = f'IT IS {mins} TO {hr+1} O\'CLOCK'
+            phrase = f'IT IS {mins} TO {hr_next} O\'CLOCK'
 
         # List of words to light up
         phrase = phrase.split(' ')

@@ -4,6 +4,10 @@ A simple clock for the TV room.
 
 Display is from this project: [https://github.com/topherCantrell/ER-OLEDM032-1](https://github.com/topherCantrell/ER-OLEDM032-1)
 
+### As seen on Adafruit Show and Tell
+[![](art/adafruit.jpg)](https://www.adafruit.com/) <br>
+https://youtu.be/juNfdw3cQBY?t=981
+
 # Links
 
 https://saelaenx.wordpress.com/2012/10/03/on-the-glcd-fonts/

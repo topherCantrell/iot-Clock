@@ -78,12 +78,11 @@ class Large7SegDisplay(DisplayBase):
     def make_time(self, xofs, yofs, hours, minutes, _seconds, config):
 
         self._draw_colon(xofs, yofs,config)
-
-        pm = False
+                        
         if config['am_pm']:
+            pm = (hours>=12)
             if hours > 12:
-                hours = hours - 12
-                pm = True
+                hours = hours - 12                
 
         hours_a = int(hours / 10)
         hours_b = int(hours % 10)
